@@ -18,6 +18,7 @@ contract Token {
 mapping(address=>uint256) public balanceOf;
 mapping(address=>mapping(address=>uint256)) public allowance;
 
+ 
 event Transfer(
 address indexed _from,
 address indexed _to,
@@ -45,7 +46,7 @@ public
 returns (bool success){
 
 // ensure that address is not zero address like 0x0000000000
-require(_spender != address(0));
+require(_spender != address(0), "Zero address is not allowed");
 
 uint256 current_val = allowance[msg.sender][_spender];
 if(current_val !=0){
@@ -67,30 +68,52 @@ returns (uint256 remaining){
 
  */
 
-
+ 
 function transfer(address _to, uint256 _value) 
 	public
 	returns(bool)
 {
 //require that sender has enough token to send
-require(balanceOf[msg.sender]  >= _value);
+require(balanceOf[msg.sender]  >= _value, "Insufficient Balance.");
 // require takes a boolean expression which must evaluate to true before it continues to the next line
 
-// ensure that address is not zero address like 0x0000000000
-require(_to != address(0));
-
-
-//deduct from spender
-balanceOf[msg.sender] = balanceOf[msg.sender] - _value;
-// credit receiver
-balanceOf[_to] = balanceOf[_to] + _value;
-//emit events
-
-emit Transfer(msg.sender, _to, _value);
+_transfer( msg.sender,  _to,  _value) ;
 return true;
 }
 
 
+function transferFrom(address _from, address _to, uint256 _value)
+public 
+returns (bool success)
+{
+require(allowance[_from][msg.sender] >= _value, "You are not permitted to access this account.");	
+require(balanceOf[_from]  >= _value, "Insufficient Balance.");
+
+allowance[_from][msg.sender] = allowance[_from][msg.sender] - _value;
+
+_transfer( _from,  _to,  _value) ;
+
+return true;
+
+}
+
+function _transfer(address _from, address _to, uint256 _value) 
+internal returns(bool success){
+
+// ensure that address is not zero address like 0x0000000000
+require(_to != address(0), "Zero address is not allowed.");
+
+
+//deduct from spender
+balanceOf[_from] = balanceOf[_from] - _value;
+// credit receiver
+balanceOf[_to] = balanceOf[_to] + _value;
+//emit events
+
+emit Transfer(_from, _to, _value);
+return true;
+
+}
 
 }
 

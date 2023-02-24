@@ -18,12 +18,12 @@ describe("Token Contract", async ()=>{
 	let Token ;
 	let token ;
 	let accounts ;
-	let receiver;
+	let receiver, receiver_account;
 	let deployer ;
 	let deployer_account ;
 	let exchange ;
-	let exchange_account ;
-	let invalid_account;
+	let exchange_account, user_account, second_user_account ;
+	let invalid_account, user, second_user;
 beforeEach(async ()=>{
 let name ="Fort";
 let symbol = "FRT";
@@ -33,13 +33,20 @@ let totalSupply = 1000000;
 		//read token name
  token  = await Token.deploy(name,symbol, totalSupply);// the deploy method invokes the constructor ofthe contract, so the args of the constructor should be passed to deploy()
 accounts = await ethers.getSigners();
-receiver = accounts[1].address;
+receiver_account= accounts[1]
+receiver = receiver_account.address;
+
 deployer = accounts[0].address;
 deployer_account =  accounts[0];
 exchange_account =  accounts[2];
+user_account =  accounts[3];
+second_user_account =  accounts[4]; 
+
+user  = user_account.address;
+second_user  = user_account.address;
 exchange =  exchange_account.address;
 invalid_account = "0x0000000000000000000000000000000000000000";
-
+ 
 })
 
 //beforeEach is executed before each it()
@@ -121,6 +128,7 @@ base_bal = await token.balanceOf(deployer);
  transaction = await token.connect(deployer_account).transfer(receiver,send_amount);
   result = await transaction.wait();
  receiver_bal = await token.balanceOf(receiver)
+ //console.log({receiver_bal});
  deployer_bal = await token.balanceOf(deployer)
   events = result.events;
 
@@ -130,22 +138,7 @@ base_bal = await token.balanceOf(deployer);
 
 		   it("transfer token balance ",  async ()=>{
 			   
-			   /* console.log("Before: ",{
-				   sender: await token.balanceOf(deployer),
-				   receiver: await token.balanceOf(receiver),
-				   send_amount
-			   }) */
-
 			   
-		   //	let expected_balance = `${base_bal-send_amount}n`;
-			   
-				// wait() will cause the transaction  
-				
-		   /* 	console.log("After: ",{
-				   sender: deployer_bal,
-				   receiver: receiver_bal,
-				   expected_balance
-			   }) */
 			   
 				expect(receiver_bal).to.equal(await convertToWei(100)) 
 				expect(deployer_bal).to.equal(await convertToWei(999900)) 
@@ -245,4 +238,120 @@ await expect(token.connect(deployer_account).approve(invalid_account, amount)).t
 	})
 
  
+
+
+	describe("Transfer From ", ()=>{
+
+		let amount, amount_to_transfer_eth, amount_to_transfer, approve, Allow_amount, balance_user, balance_second_user, approvedResult, allowedEvents, transfer_from, transfer_from_result; 
+		
+		describe("Success", ()=>{
+			beforeEach(async ()=>{
+				amount =200;
+				 Allow_amount = await convertToWei(amount);
+
+				 amount_to_transfer_eth = 50;
+				 amount_to_transfer = await convertToWei(amount_to_transfer_eth);
+				
+
+			approve = await token.connect(receiver_account).approve(exchange, Allow_amount);
+			approvedResult = await approve.wait(); 
+			
+			allowedEvents = approvedResult.events[0];
+			
+			// transfer money to reciever for test
+			await token.connect(deployer_account).transfer(receiver,Allow_amount);
+  
+			balance_user = await token.balanceOf(receiver)
+		 balance_second_user = await token.balanceOf(second_user)
+
+		// console.log({state:"Before", balance_user, balance_second_user})
+		
+		})
+
+
+
+			it("transfer from works on approved address", async ()=>{
+				 
+				transfer_from = await token.connect(exchange_account).transferFrom(receiver, second_user, amount_to_transfer);
+				
+				transfer_from_result = await transfer_from.wait()
+
+		 balance_user = await token.balanceOf(receiver)
+		 balance_second_user = await token.balanceOf(second_user)
+
+		let expected_user_bal = await convertToWei(amount - amount_to_transfer_eth);
+		//let expected_second_user_bal = await convertToWei(amount_to_transfer);
+ 
+		expect(balance_user).to.equal(expected_user_bal);
+		expect(balance_second_user).to.equal(amount_to_transfer);
+		 
+			})
+		
+		 
+		
+		it("check if event was fired after transfer from ", async ()=>{
+			transfer_from = await token.connect(exchange_account).transferFrom(receiver, second_user, amount_to_transfer);
+				
+				transfer_from_result = await transfer_from.wait()
+				 
+			 let allowedEventsName = transfer_from_result.events[0];
+			 let args = transfer_from_result.events[0].args;
+				 
+			expect(allowedEventsName.event).to.equal("Transfer");
+			expect(args._from).to.equal(receiver);
+			expect(args._to).to.equal(second_user);
+			expect(args._value).to.equal(amount_to_transfer);
+				}) 
+		})
+		
+		 
+		describe("Failure", ()=>{
+			beforeEach(async ()=>{
+				amount =200;
+				 Allow_amount = await convertToWei(amount);
+
+				 amount_to_transfer_eth = 50;
+				 amount_to_transfer = await convertToWei(amount_to_transfer_eth);
+				
+
+			approve = await token.connect(receiver_account).approve(exchange, Allow_amount);
+			approvedResult = await approve.wait(); 
+			
+			allowedEvents = approvedResult.events[0];
+			
+			// transfer money to reciever for test
+			await token.connect(deployer_account).transfer(receiver,Allow_amount);
+  
+			balance_user = await token.balanceOf(receiver)
+		 balance_second_user = await token.balanceOf(second_user)
+
+		// console.log({state:"Before", balance_user, balance_second_user})
+		
+		})
+
+
+
+			it("transfer should not work on unapproved address", async ()=>{
+				  
+ 
+		await expect( token.connect(exchange_account).transferFrom(user, second_user, amount_to_transfer)).to.be.reverted
+		 
+			})
+		
+		 
+			it("transfer should not  work on approved address with amount not matching allowed amount or remaining allowed balance", async ()=>{
+				  let invalid_amount_to_transfer = await convertToWei(201);
+ 
+				await expect( token.connect(exchange_account).transferFrom(receiver, second_user, invalid_amount_to_transfer)).to.be.reverted
+				 
+					})
+
+ 
+		  
+		})
+		
+
+			})
+		
+
 })
