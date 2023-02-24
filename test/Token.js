@@ -21,6 +21,9 @@ describe("Token Contract", async ()=>{
 	let receiver;
 	let deployer ;
 	let deployer_account ;
+	let exchange ;
+	let exchange_account ;
+	let invalid_account;
 beforeEach(async ()=>{
 let name ="Fort";
 let symbol = "FRT";
@@ -33,6 +36,9 @@ accounts = await ethers.getSigners();
 receiver = accounts[1].address;
 deployer = accounts[0].address;
 deployer_account =  accounts[0];
+exchange_account =  accounts[2];
+exchange =  exchange_account.address;
+invalid_account = "0x0000000000000000000000000000000000000000";
 
 })
 
@@ -97,7 +103,8 @@ expect(name).to.equal("Fort")
 								})
 			})
 
-								 
+describe("Transfer", ()=>{
+									 
 describe("Success", ()=>{
 
 
@@ -180,12 +187,62 @@ await expect(token.connect(deployer_account).transfer(receiver, invalid_amount))
 	it("Reject Zero address: ", async ()=>{
 		let invalid_amount = convertToWei(10000000);
 	
-	await expect(token.connect(deployer_account).transfer("0x0000000000000000000000000000000000000000", invalid_amount)).to.be.reverted;
+	await expect(token.connect(deployer_account).transfer(invalid_account, invalid_amount)).to.be.reverted;
 		
 		})
 
 })
 
+})
 
 
+describe("Approve", ()=>{
+
+let amount, approve, approvedResult, allowedEvents; 
+
+describe("Success", ()=>{
+	beforeEach(async ()=>{
+		amount = await convertToWei(200);
+	approve = await token.connect(deployer_account).approve(exchange, amount);
+	approvedResult = await approve.wait(); 
+	
+	allowedEvents = approvedResult.events[0];
+	
+	})
+	it("check if approved", async ()=>{
+		//console.log({exchange, amount})
+let allowed = await token.allowance(deployer, exchange);
+
+expect(allowed).to.equal(amount);
+	})
+
+
+
+it("check approved event ", async ()=>{
+	 let allowedEventsName = allowedEvents.event;
+	 let args = allowedEvents.args;
+	    
+	expect(allowedEventsName).to.equal("Approval");
+	expect(args.spender).to.equal(exchange);
+	expect(args.owner).to.equal(deployer);
+	expect(args.value).to.equal(amount);
+		})
+})
+
+
+describe("Failure", ()=>{
+	
+	it("Don't approve zero address", async ()=>{
+		amount = await convertToWei(200);
+	 
+
+
+await expect(token.connect(deployer_account).approve(invalid_account, amount)).to.be.reverted;
+	})
+  
+})
+
+	})
+
+ 
 })

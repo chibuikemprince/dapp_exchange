@@ -16,6 +16,7 @@ contract Token {
 
 //CREATE A 	MAP TO HOLD BALANCE
 mapping(address=>uint256) public balanceOf;
+mapping(address=>mapping(address=>uint256)) public allowance;
 
 event Transfer(
 address indexed _from,
@@ -23,6 +24,12 @@ address indexed _to,
 uint256 _value
 
 );
+
+event Approval(
+	address indexed owner, 
+	address indexed spender, 
+	uint256 value
+	);
 
 constructor(string memory _name, string memory _symbol, uint256 _totalSupply){
 	// constructor function executed once as th contract is deployed.
@@ -32,6 +39,34 @@ constructor(string memory _name, string memory _symbol, uint256 _totalSupply){
 	 balanceOf[msg.sender] = totalSupply;
 	owner = msg.sender;
 }
+
+function approve(address _spender, uint256 _value) 
+public 
+returns (bool success){
+
+// ensure that address is not zero address like 0x0000000000
+require(_spender != address(0));
+
+uint256 current_val = allowance[msg.sender][_spender];
+if(current_val !=0){
+	 _value = 0;
+}
+ 
+allowance[msg.sender][_spender] = _value;
+	emit Approval(msg.sender, _spender, _value);
+	return true;
+}
+
+/* 
+function allowance(address _owner, address _spender) 
+public 
+view 
+returns (uint256 remaining){
+
+}
+
+ */
+
 
 function transfer(address _to, uint256 _value) 
 	public
