@@ -82,10 +82,14 @@ return true;
 }
 
 
-function transferFrom(address _from, address _to, uint256 _value)
+function transferFrom(address _from,
+ address _to, 
+ uint256 _value
+ )
 public 
 returns (bool success)
 {
+	console.log (_from , _to, _value);
 require(allowance[_from][msg.sender] >= _value, "You are not permitted to access this account.");	
 require(balanceOf[_from]  >= _value, "Insufficient Balance.");
 

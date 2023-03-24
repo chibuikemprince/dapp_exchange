@@ -127,6 +127,11 @@ base_bal = await token.balanceOf(deployer);
 
  transaction = await token.connect(deployer_account).transfer(receiver,send_amount);
   result = await transaction.wait();
+  //wait() allows the code to wait till the transaction is done on the blockchain
+  
+ // before it continues to execute other lines 
+
+ 
  receiver_bal = await token.balanceOf(receiver)
  //console.log({receiver_bal});
  deployer_bal = await token.balanceOf(deployer)
