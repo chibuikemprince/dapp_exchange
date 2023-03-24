@@ -16,6 +16,7 @@ feePercent = _feePercent;
 }
 
 event Deposit(address token, address user, uint256 amount, uint256 balance);
+event Withdraw(address token, address user, uint256 amount, uint256 balance);
 
 function depositToken(address _token, uint256 _amount) public{
     //transfer token to exchange
@@ -39,6 +40,16 @@ return wallet[_token][_user];
 }
 
 
+function withdraw(address token, uint256 _amount) 
+public{
+require(balanceOf(token, msg.sender)>= _amount, "Insufficient Ex Balance");
+require(Token(token).transfer(msg.sender, _amount));
 
+wallet[token][msg.sender] = wallet[token][msg.sender] -_amount;
+ uint256 balance =  wallet[token][msg.sender];
+
+emit Withdraw(token, msg.sender, _amount, balance);
+
+}
 
 }

@@ -184,8 +184,13 @@ it("Tracks the token deposit", async()=>{
 })
 	 
 	
-describe("Failure",()=>{ 
-
+describe("Failure", async ()=>{ 
+	let user_ex_bal = await exchange.balanceOf(token1.address, user1) 
+  
+	console.log({
+	     
+	   user_ex_bal 
+   }) 
 	
 	beforeEach(async ()=>{
 		depositAmount   = await convertToWei(140);
@@ -210,5 +215,143 @@ describe("Failure",()=>{
 	
 		
 					}) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+				
+					describe("Withdrawing tokens",()=>{ 
+						let ex_bal, user_bal; 
+						
+					
+					
+					describe("Success",()=>{ 
+					
+						
+						beforeEach(async ()=>{
+							depositAmount   = await convertToWei(140);
+							token1.connect(user1_account).approve(exchange.address, depositAmount)
+							token1.connect(deployer_account).transfer(user1, await convertToWei(200))
+						 
+								ex_bal = await token1.balanceOf(exchange.address) 
+							   user_bal = await token1.balanceOf(user1) 
+							 
+						 
+							 transaction = await exchange.connect(user1_account).depositToken(token1.address,depositAmount)
+						 
+
+						 // withdraw 
+						 transaction = await exchange.connect(user1_account).withdraw(token1.address,depositAmount)
+						 
+						 result = await transaction.wait()
+
+
+							 })
+						 
+					
+					it("Withdraw success", async()=>{
+						 // expect(await token1.balanceOf(exchange_address)).to
+						
+						
+						 ex_bal = await token1.balanceOf(exchange.address) 
+						 user_bal = await token1.balanceOf(user1) 
+					  // let user_ex_bal = await exchange.wallet(token1.address, user1) 
+					 // the wallet method here queries the wallet mapping of the exchange
+					 
+					    let user_ex_bal = await exchange.balanceOf(token1.address, user1) 
+					  
+						 console.log({
+							ex_bal,
+							user_bal,
+							user: user1,
+							user_ex_bal,
+							ex: exchange.address,
+							depositAmount
+						}) 
+						 expect(ex_bal).to.equal(0)
+						 expect(user_ex_bal).to.equal(0)
+						 
+					
+					
+						})
+					 
+						it("Emits Withdraw Event", async()=>{
+							// expect(await token1.balanceOf(exchange_address)).to
+						   let depositEvent = result.events[1].args;
+					
+						   let withdrawnToken = depositEvent.token;
+						   let withdrawer = depositEvent.user;
+						   let withdrawnAmount = depositEvent.amount;
+						   let withdrawerBalance= depositEvent.balance;
+						   
+							 console.log({
+								withdrawnToken,
+								withdrawer,
+								withdrawnAmount,
+								withdrawerBalance 
+							 })
+							expect(withdrawnToken).to.equal(token1.address)
+							expect(withdrawer).to.equal(user1)
+							 expect(withdrawnAmount).to.equal(depositAmount)
+							 expect(withdrawerBalance).to.equal(0)
+					   
+					   
+					   
+						   })
+
+
+					})
+						 
+							
+					describe("Failure",()=>{ 
+					
+						
+						beforeEach(async ()=>{
+							depositAmount   = await convertToWei(140);
+							token1.connect(user1_account).approve(exchange.address, depositAmount)
+							token1.connect(deployer_account).transfer(user1, await convertToWei(200))
+						 
+								ex_bal = await token1.balanceOf(exchange.address) 
+							   user_bal = await token1.balanceOf(user1) 
+						 
+						 // withdraw 
+						 
+
+							 })
+						 
+					
+					it("Insufficient balance", async()=>{
+						  
+						await expect( exchange.connect(user1_account).withdraw(token1.address,await convertToWei(200))).to.be.reverted;
+
+	 
+						 
+					
+					
+						})
+					 
+					 
+
+
+					})	      
+						
+						
+							
+										}) 
+
+
 
 })
