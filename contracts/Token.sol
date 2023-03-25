@@ -89,7 +89,7 @@ function transferFrom(address _from,
 public 
 returns (bool success)
 {
-	console.log (_from , _to, _value);
+	//console.log (_from , _to, _value);
 require(allowance[_from][msg.sender] >= _value, "You are not permitted to access this account.");	
 require(balanceOf[_from]  >= _value, "Insufficient Balance.");
 
