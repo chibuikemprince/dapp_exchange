@@ -589,4 +589,221 @@ await expect(amountGive).to.equal(depositAmount)
 												
 															}) 
 
+
+describe("fill orders",()=>{
+
+describe("success", ()=>{
+	beforeEach(async ()=>{
+		depositAmount =  await convertToWei(200)
+	
+await token1.connect(deployer_account).transfer(user1, depositAmount)
+await token2.connect(deployer_account).transfer(user2, depositAmount)
+
+await token1.connect(user1_account).approve(exchange.address,depositAmount)
+await token2.connect(user2_account).approve(exchange.address,  await convertToWei(400) )
+
+let user1_dapp = await token1.balanceOf( user1) 
+let user1_sz = await token2.balanceOf(  user1)  
+
+
+let ex_dapp = await token1.balanceOf( exchange.address) 
+let ex_sz = await token1.balanceOf( exchange.address) 
+
+let user2_dapp = await token1.balanceOf( user2) 
+let user2_sz = await token2.balanceOf(  user2) 
+/* 
+console.log("Before deposit to Ex", {
+	ex_sz,
+	ex_dapp,
+	user1_dapp,
+	user1_sz,
+	user2_dapp,
+	user2_sz
+})
+ */
+
+await exchange.connect(user1_account).depositToken(token1.address,depositAmount) 
+await exchange.connect(user2_account).depositToken(token2.address,depositAmount)
+/* 
+ user1_dapp = await Exchange.balanceOf(token1.address, user1) 
+ user1_sz = await Exchange.balanceOf(token2.address, user1)  
+
+
+ user2_dapp = await Exchange.balanceOf(token1.address, user2) 
+ user2_sz = await Exchange.balanceOf(token2.address, user2) 
+ 
+ */ 
+
+ let user1_ex_dapp = await exchange.balanceOf(token1.address, user1) 
+ let user1_ex_sz = await exchange.balanceOf(token2.address, user1)  
+ let user2_ex_dapp = await exchange.balanceOf(token1.address, user2) 
+ let user2_ex_sz = await exchange.balanceOf(token2.address, user2)  
+ let feeAccount_ex_dapp = await exchange.balanceOf(token1.address, feeAccount)  
+ let feeAccount_ex_sz = await exchange.balanceOf(token2.address, feeAccount)  
+
+ user1_dapp = await token1.balanceOf( user1) 
+  user1_sz = await token2.balanceOf(  user1)  
+ 
+  ex_dapp = await token1.balanceOf( exchange.address) 
+    ex_sz = await token1.balanceOf( exchange.address)
+ 
+  user2_dapp = await token1.balanceOf( user2) 
+  user2_sz = await token2.balanceOf(  user2) 
+ /* 
+ console.log("After deposit to Ex", {
+	feeAccount_ex_dapp,
+	feeAccount_ex_sz,
+	user1_ex_dapp,
+	user1_ex_sz,
+	user2_ex_dapp,
+	user2_ex_sz,
+	ex_sz,
+	ex_dapp,
+	 user1_dapp,
+	 user1_sz,
+	 user2_dapp,
+	 user2_sz
+ }) */
+
+ depositAmount =  await convertToWei(100)
+ transaction = await exchange.connect(user1_account).makeOrder(token2.address,depositAmount,token1.address, depositAmount)
+ transaction = await exchange.connect(user2_account).fillOrder(1)
+ result = await transaction.wait()
+					
+ 
+   user1_ex_dapp = await exchange.balanceOf(token1.address, user1) 
+   user1_ex_sz = await exchange.balanceOf(token2.address, user1)  
+   user2_ex_dapp = await exchange.balanceOf(token1.address, user2) 
+   user2_ex_sz = await exchange.balanceOf(token2.address, user2)  
+   feeAccount_ex_dapp = await exchange.balanceOf(token1.address, feeAccount)  
+   feeAccount_ex_sz = await exchange.balanceOf(token2.address, feeAccount)  
+ user1_dapp = await token1.balanceOf( user1) 
+ user1_sz = await token2.balanceOf(  user1)  
+
+ ex_dapp = await token1.balanceOf( exchange.address) 
+   ex_sz = await token1.balanceOf( exchange.address)
+
+ user2_dapp = await token1.balanceOf( user2) 
+ user2_sz = await token2.balanceOf(  user2) 
+
+/*  console.log("After fill order", {
+	feeAccount_ex_dapp,
+	feeAccount_ex_sz,
+	user1_ex_dapp,
+	user1_ex_sz,
+	user2_ex_dapp,
+	user2_ex_sz})
+ */
+	})
+it("Order Filled Successfully", async ()=>{
+
+	depositAmount =  await convertToWei(100)
+
+ let orderFee =  await convertToWei(10)
+	 let user1_ex_sz = await exchange.balanceOf(token2.address, user1)  
+	let user2_ex_dapp = await exchange.balanceOf(token1.address, user2) 
+	  let feeAccount_ex_sz = await exchange.balanceOf(token2.address, feeAccount)  
+	expect(feeAccount_ex_sz).to.equal(orderFee)
+	expect(user2_ex_dapp).to.equal(depositAmount)
+	expect(user1_ex_sz).to.equal(depositAmount) 
+
+})
+
+it("Emit FillOrder events", async()=>{
+						 
+ depositAmount =  await convertToWei(100)
+	let depositEvent = result.events[0].args;
+				// console.log({depositEvent})
+					   let tokenGet = depositEvent.tokenGet;
+					   let tokenGive = depositEvent.tokenGive;
+					   let amountGive = depositEvent.amountGive;
+					   let amountGet = depositEvent.amountGet;
+					   let myuser = depositEvent.user;
+					   let orderCount = depositEvent.id;
+					   let timestamp = depositEvent.timestamp;
+					   
+
+
+await expect(myuser).to.equal(user2)
+await expect(orderCount).to.equal(1)
+
+await expect(amountGive).to.equal(depositAmount)
+	await expect(amountGet).to.equal(depositAmount)
+	//await expect(tokenGive).to.equal(token2.address)
+	await expect(tokenGet).to.equal(token1.address)
+	  
+ 
+	})
+
+
+
+
+
+})
+
+
+describe("failure", ()=>{
+	beforeEach(async ()=>{
+		depositAmount =  await convertToWei(200)
+	
+await token1.connect(deployer_account).transfer(user1, depositAmount)
+await token2.connect(deployer_account).transfer(user2, depositAmount)
+
+await token1.connect(user1_account).approve(exchange.address,depositAmount)
+await token2.connect(user2_account).approve(exchange.address,  await convertToWei(400) )
+ 
+
+
+await exchange.connect(user1_account).depositToken(token1.address,depositAmount) 
+await exchange.connect(user2_account).depositToken(token2.address,depositAmount)
+/* 
+ user1_dapp = await Exchange.balanceOf(token1.address, user1) 
+ user1_sz = await Exchange.balanceOf(token2.address, user1)  
+
+
+ user2_dapp = await Exchange.balanceOf(token1.address, user2) 
+ user2_sz = await Exchange.balanceOf(token2.address, user2) 
+ 
+ */ 
+ 
+
+ depositAmount =  await convertToWei(100)
+ transaction = await exchange.connect(user1_account).makeOrder(token2.address,depositAmount,token1.address, depositAmount)
+
+ result = await transaction.wait()
+					
+
+
+
+})
+
+ 
+    
+it("Order Cannot Be Filled Twice.", async ()=>{
+
+	transaction = await exchange.connect(user2_account).fillOrder(1)
+
+  await expect( exchange.connect(user2_account).fillOrder(1) ).to.be.reverted
+
+})
+
+
+
+  
+it("Cancelled Order Cannot Be Filled.", async ()=>{
+
+  transaction = await exchange.connect(user1_account).cancelOrder(1)
+
+await expect( exchange.connect(user2_account).fillOrder(1) ).to.be.reverted
+
+})
+
+})
+
+
+})
+
+
+
+
 })
