@@ -11,6 +11,7 @@ uint256 public orderCount;
 mapping(address=>mapping(address=>uint256)) public wallet;
 mapping(uint256 => _Orders) public Order ;
 mapping(uint256 => bool) public OrderCancelled ;
+mapping(uint256 => bool) public OrderFilled ;
 
 struct _Orders{
     uint256 id; // unique id for each order
@@ -54,6 +55,20 @@ event CancelOrdersEvent(
     uint256  timestamp // when order was created
 
 );
+
+
+
+event FillOrdersEvent(
+ uint256 id, // unique id for each order
+    address user, // ser who performed the order transaction
+    address tokenGet, // address of the token to receive
+    uint256 amountGet, // amount to receive
+    address tokenGive, // address of token to give
+    uint256 amountGive, // amount to give
+    uint256  timestamp // when order was created
+
+);
+
 function depositToken(address _token, uint256 _amount) public{
     //transfer token to exchange
     require(Token(_token).transferFrom(msg.sender,address(this),_amount));
@@ -114,7 +129,6 @@ amountGive,
 block.timestamp
 );
 
-
 emit OrdersEvent(
 orderCount, 
 msg.sender,
@@ -135,7 +149,7 @@ function cancelOrder(uint256 _id) public {
 
 _Orders storage _order = Order[_id];
  
-require(_order.id>0,"Invalid Order");
+require(_order.id>0 && _order.id >= orderCount,"Invalid Order");
 require(_order.user==msg.sender,"Unauthorized access");
 
 OrderCancelled[_id] = true;
@@ -153,6 +167,52 @@ block.timestamp
 }
 
 
+
+function fillOrder(uint256 _id) public {
+
+
+_Orders storage _order = Order[_id];
+
+uint256 feeAmount = (feePercent*_order.amountGet)/100;
+
+/* 
+console.log(feeAmount, " Sum ", _order.amountGet+feeAmount );
+console.log(  " Balance ", _order.tokenGet,  " Balance " , balanceOf(_order.tokenGet, msg.sender) );
+console.log(balanceOf(_order.tokenGet, msg.sender)>= (_order.amountGet+feeAmount), " feePercent ", feePercent);
+ */
+ // console.log("Cancelled: ",OrderCancelled[_order.id]) ;
+//  console.log( "Filed: ",OrderFilled[_order.id], "ID: ", _order.id) ;
+require(_order.id>0 && _order.id >= orderCount,"Invalid Order");
+require(_order.user != msg.sender,"You cannot fill your order");
+require(OrderCancelled[_order.id]==false, "Order Cancelled");
+require(OrderFilled[_order.id]==false, "Order Filled");
+require(balanceOf(_order.tokenGet, msg.sender)>= (_order.amountGet+feeAmount), "Insufficient Ex Balance for trade filler");
+require(balanceOf(_order.tokenGive, _order.user)>= _order.amountGive, "Insufficient Ex Balance for trade owner");
+
+
+wallet[_order.tokenGet][_order.user] = wallet[_order.tokenGet][_order.user] + _order.amountGet ;
+wallet[_order.tokenGive][_order.user] = wallet[_order.tokenGive][_order.user] - _order.amountGive ;
+
+
+wallet[_order.tokenGet][msg.sender] = wallet[_order.tokenGet][msg.sender]  - (_order.amountGet+feeAmount) ;
+wallet[_order.tokenGive][msg.sender] = wallet[_order.tokenGive][msg.sender] + _order.amountGive ;
+
+wallet[_order.tokenGet][feeAccount] = wallet[_order.tokenGet][feeAccount]  + (feeAmount) ;
+
+
+OrderFilled[_order.id] = true;
+
+emit FillOrdersEvent(
+_order.id, 
+msg.sender,
+_order.tokenGive,
+_order.amountGive,
+_order.tokenGet,
+_order.amountGet,
+block.timestamp
+);
+
+}
 
 
 
